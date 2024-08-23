@@ -1,58 +1,97 @@
 import { NextResponse } from 'next/server'
-import { PineconeClient } from '@pinecone-database/pinecone'
-import axios from 'axios'
+import { Pinecone } from '@pinecone-database/pinecone'
+import { ReadableStream } from 'web-streams-polyfill'
 
-const systemPrompt = `
-You are a rate my professor agent to help students find classes, that takes in user questions and answers them.
-For every user question, the top 3 professors that match the user question are returned.
-Use them to answer the question if needed.
-`
+// Define constants
+const PINECONE_API_KEY = process.env.PINECONE_API_KEY
+const EMBEDDING_DIMENSION = 1536
+const INDEX_NAME = 'rag'
 
-export async function POST(req) {
-    const data = await req.json()
+// Check if the API key is set
+if (!PINECONE_API_KEY) {
+    throw new Error('PINECONE_API_KEY environment variable is not set.')
+}
 
-    // Initialize Pinecone client
-    const pc = new PineconeClient() // Initialize without parameters
-    await pc.init({
-        apiKey: process.env.PINECONE_API_KEY,
-    })
-    const index = pc.Index('rag').Namespace('ns1')
+// Initialize Pinecone client
+const pc = new Pinecone({ apiKey: PINECONE_API_KEY })
 
-    // Initialize Gemini API
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY
-    const GEMINI_EMBEDDING_API_URL = "https://generativelanguage.googleapis.com/v1beta/gemini-1_5-flash:embedText"
-    const GEMINI_CHAT_API_URL = "https://generativelanguage.googleapis.com/v1beta/gemini-1_5-flash:generateChat"
+// Access the index
+const index = pc.Index(INDEX_NAME)
 
+// Initialize Pinecone index
+async function initializePinecone() {
     try {
-        // Create embeddings
-        const text = data[data.length - 1]?.content
-        const embeddingResponse = await axios.post(GEMINI_EMBEDDING_API_URL, {
-            model: 'gemini-1.5-flash',
-            text: text
-        }, {
-            headers: {
-                "Authorization": `Bearer ${GEMINI_API_KEY}`,
-                "Content-Type": "application/json"
-            }
-        })
+        // Check if the index exists, create if not
+        const indexList = await pc.listIndexes()
+        if (!indexList.includes(INDEX_NAME)) {
+            await pc.createIndex({
+                name: INDEX_NAME,
+                dimension: EMBEDDING_DIMENSION,
+                metric: 'cosine',
+                spec: { cloud: 'aws', region: 'us-east-1' }
+            })
+            console.log(`Index '${INDEX_NAME}' created successfully.`)
+        } else {
+            console.log(`Index '${INDEX_NAME}' already exists.`)
+        }
+    } catch (error) {
+        console.error('Error initializing Pinecone client:', error)
+        throw new Error('Failed to initialize Pinecone client')
+    }
+}
 
-        const embedding = embeddingResponse.data.embedding
+// Ensure Pinecone is initialized
+initializePinecone()
+
+// Simulated embedding function
+async function getEmbedding(text) {
+    // Replace with actual embedding logic
+    const embedding = new Array(EMBEDDING_DIMENSION).fill(Math.random())
+    console.log('Generated embedding:', embedding)
+    return embedding
+}
+
+// Handle POST requests
+export async function POST(req) {
+    try {
+        const data = await req.json()
+        console.log('Received data:', data)
+
+        const text = data[data.length - 1]?.content
+        if (!text) {
+            console.log('No content provided for embedding')
+            return NextResponse.json({ error: 'No content provided for embedding' }, { status: 400 })
+        }
+
+        // Get embedding
+        const embedding = await getEmbedding(text)
+        if (!embedding) {
+            console.log('Failed to retrieve embedding')
+            return NextResponse.json({ error: 'Failed to retrieve embedding' }, { status: 500 })
+        }
 
         // Query Pinecone index
         const results = await index.query({
-            topK: 5,
+            topK: 3,
             includeMetadata: true,
-            vector: embedding,
+            vector: embedding
         })
+
+        console.log('Query results:', results)
+
+        if (!results.matches.length) {
+            console.log('No matches found in Pinecone index.')
+            return NextResponse.json({ message: 'No relevant results found.' }, { status: 404 })
+        }
 
         let resultString = ''
         results.matches.forEach((match) => {
             resultString += `
             Returned Results:
             Professor: ${match.id}
-            Review: ${match.metadata.review} // Adjust based on available metadata fields
-            Subject: ${match.metadata.subject}
-            Stars: ${match.metadata.stars}
+            Review: ${match.metadata?.review || 'N/A'}
+            Subject: ${match.metadata?.subject || 'N/A'}
+            Stars: ${match.metadata?.stars || 'N/A'}
             \n\n`
         })
 
@@ -60,45 +99,16 @@ export async function POST(req) {
         const lastMessageContent = lastMessage.content + resultString
         const lastDataWithoutLastMessage = data.slice(0, -1)
 
-        // Generate chat completion with Gemini API
-        const chatCompletionResponse = await axios.post(GEMINI_CHAT_API_URL, {
-            model: 'gemini-1.5-flash',
-            messages: [
-                { role: 'system', content: systemPrompt },
-                ...lastDataWithoutLastMessage,
-                { role: 'user', content: lastMessageContent }
-            ]
-        }, {
-            headers: {
-                "Authorization": `Bearer ${GEMINI_API_KEY}`,
-                "Content-Type": "application/json"
-            },
-            responseType: 'stream' // Ensure streaming is supported
-        })
-
-        // Return the response stream
-        const stream = new ReadableStream({
+        // Simulate chat completion
+        const chatCompletionResponse = new ReadableStream({
             async start(controller) {
-                const encoder = new TextEncoder()
-                try {
-                    chatCompletionResponse.data.pipeTo(new WritableStream({
-                        write(chunk) {
-                            controller.enqueue(encoder.encode(chunk))
-                        },
-                        close() {
-                            controller.close()
-                        },
-                        error(err) {
-                            controller.error(err)
-                        }
-                    }))
-                } catch (err) {
-                    controller.error(err)
-                }
-            },
+                const responseText = `Processed response based on input: ${lastMessageContent}`
+                controller.enqueue(new TextEncoder().encode(responseText))
+                controller.close()
+            }
         })
 
-        return new NextResponse(stream)
+        return new NextResponse(chatCompletionResponse)
 
     } catch (error) {
         console.error('Error in POST request:', error)
