@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import { useRouter } from 'next/navigation';
 import { Box, Button, Typography } from '@mui/material';
 import { styled } from '@mui/system';
@@ -83,19 +83,54 @@ const RatingStars = styled(motion(Box))(({ theme }) => ({
 }));
 
 const ParticleBackground = styled(motion(Box))(({ theme }) => ({
-    position: 'absolute',
-    width: '100%',
-    height: '100%',
-    zIndex: 0,
-    overflow: 'hidden',
-    pointerEvents: 'none',
-    background: 'radial-gradient(circle, rgba(0, 191, 255, 0.3) 5%, rgba(0, 191, 255, 0) 80%)',
-  }));  
+  position: 'absolute',
+  width: '100%',
+  height: '100%',
+  zIndex: 0,
+  overflow: 'hidden',
+  pointerEvents: 'none',
+  background: 'radial-gradient(circle, rgba(0, 191, 255, 0.3) 5%, rgba(0, 191, 255, 0) 80%)',
+}));
+
+const BorderMotion = styled(motion.div)(({ theme }) => ({
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  width: '100%',
+  height: '100%',
+  border: '5px solid transparent',
+  borderRadius: '12px',
+  zIndex: 1,
+  boxSizing: 'border-box',
+  borderImage: 'linear-gradient(45deg, #ff007a, #ff7e00, #00d2ff, #00ff7b) 1',
+  pointerEvents: 'none',
+  overflow: 'hidden',
+  animation: 'borderAnimate 10s linear infinite, glow 1.5s alternate infinite',
+  '@keyframes borderAnimate': {
+    '0%': {
+      borderImageSource: 'linear-gradient(45deg, #ff007a, #ff7e00, #00d2ff, #00ff7b)',
+    },
+    '50%': {
+      borderImageSource: 'linear-gradient(45deg, #00ff7b, #00d2ff, #ff7e00, #ff007a)',
+    },
+    '100%': {
+      borderImageSource: 'linear-gradient(45deg, #ff007a, #ff7e00, #00d2ff, #00ff7b)',
+    },
+  },
+  '@keyframes glow': {
+    '0%': {
+      boxShadow: '0 0 10px rgba(255, 255, 255, 0.5)',
+    },
+    '100%': {
+      boxShadow: '0 0 30px rgba(255, 255, 255, 1)',
+    },
+  },
+}));
 
 const particleVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 0.5 },  // Adjust opacity to make it more transparent
-  };
+  hidden: { opacity: 0 },
+  visible: { opacity: 0.5 },  // Adjust opacity to make it more transparent
+};
 
 export default function GetStartedPage() {
   const router = useRouter();
@@ -117,6 +152,7 @@ export default function GetStartedPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: 'easeOut' }}
       />
+      <BorderMotion />
       <Box textAlign="center" zIndex={2}>
         <Typography variant="h2" sx={{ color: '#fff', mb: 2 }}>
           RATE MY PROFESSOR!
@@ -136,8 +172,8 @@ export default function GetStartedPage() {
           Help students make informed decisions by rating their professors and sharing feedback.
         </Typography>
         <GetStartedButtonContainer
-          animate={{ scale: [1, 1.1, 1] }}  // Slightly increased scale values for more pronounced zoom
-          transition={{ duration: 2, ease: 'easeInOut', repeat: Infinity }}  // Decreased duration for faster zoom effect
+          animate={{ scale: [1, 1.05, 1] }}  // Adjusted scale values
+          transition={{ duration: 1, ease: 'easeInOut', repeat: Infinity }}  // Increased duration for slower zoom effect
         >
           <GetStartedButton
             onClick={handleGetStartedClick}
