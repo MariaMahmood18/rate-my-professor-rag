@@ -3,7 +3,6 @@ import { useRouter } from 'next/navigation';
 import { Box, Button, Typography } from '@mui/material';
 import { styled } from '@mui/system';
 import { motion } from 'framer-motion';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward'; // Import Arrow icon
 
 const Background = styled(Box)(({ theme }) => ({
   width: '100vw',
@@ -29,10 +28,6 @@ const GetStartedButton = styled(Button)(({ theme }) => ({
   borderRadius: '12px',
   boxShadow: '0px 15px 35px rgba(0, 183, 172, 0.5)',
   textTransform: 'uppercase',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: '10px', // Space between text and arrow
   '&:hover': {
     background: 'linear-gradient(135deg, #009688, #005bb5)',
     boxShadow: '0px 20px 40px rgba(0, 183, 172, 0.7)',
@@ -130,7 +125,7 @@ const BorderMotion = styled(motion.div)(({ theme }) => ({
         boxShadow: '0 0 30px rgba(255, 255, 255, 1)',
       },
     },
-}));
+  }));
   
 const particleVariants = {
   hidden: { opacity: 0 },
@@ -187,7 +182,6 @@ export default function GetStartedPage() {
             transition={{ type: 'spring', stiffness: 300 }}
           >
             Get Started
-            <ArrowForwardIcon sx={{ fontSize: '1.8rem', ml: 1 }} /> {/* Arrow icon */}
           </GetStartedButton>
         </GetStartedButtonContainer>
       </Box>
