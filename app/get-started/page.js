@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { Box, Button, Typography } from '@mui/material';
 import { styled } from '@mui/system';
 import { motion } from 'framer-motion';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'; // Import the arrow icon
 
 const Background = styled(Box)(({ theme }) => ({
   width: '100vw',
@@ -16,7 +17,8 @@ const Background = styled(Box)(({ theme }) => ({
 }));
 
 const GetStartedButtonContainer = styled(motion.div)(({ theme }) => ({
-  display: 'inline-block',
+  display: 'inline-flex',  // Changed to inline-flex to align items horizontally
+  alignItems: 'center',
   zIndex: 2,
 }));
 
@@ -29,6 +31,8 @@ const GetStartedButton = styled(Button)(({ theme }) => ({
     boxShadow: '0px 15px 35px rgba(0, 183, 172, 0.5)',
     textTransform: 'uppercase',
     transition: 'all 0.3s ease',  // Smooth transition for all properties
+    display: 'flex',
+    alignItems: 'center',  // Align text and icon vertically
     '&:hover': {
       color: '#fff',  // Text color becomes white on hover
       background: 'linear-gradient(135deg, #00bfae, #0070f3)',  // Background gradient on hover
@@ -37,8 +41,7 @@ const GetStartedButton = styled(Button)(({ theme }) => ({
     '&:active': {
       boxShadow: '0px 15px 30px rgba(0, 183, 172, 0.4)',
     },
-  }));
-  
+}));
 
 const ProfessorIcon = styled(motion(Box))(({ theme }) => ({
   position: 'absolute',
@@ -101,33 +104,49 @@ const BorderMotion = styled(motion.div)(({ theme }) => ({
     left: 0,
     width: '100%',
     height: '100%',
-    border: '10px solid transparent', // Increased thickness
-    borderRadius: '12px',
+    border: '15px solid transparent', // Increased thickness
+    borderRadius: '20px', // Increased border-radius for more curve
     zIndex: 1,
     boxSizing: 'border-box',
-    borderImage: 'linear-gradient(45deg, #ff007a, #ff7e00, #00d2ff, #00ff7b) 1',
     pointerEvents: 'none',
     overflow: 'hidden',
+    borderImage: 'radial-gradient(circle, #ff007a, #ff7e00, #00d2ff, #00ff7b) 1', // Curvy gradient border
     animation: 'borderAnimate 10s linear infinite, glow 1.5s alternate infinite',
     '@keyframes borderAnimate': {
       '0%': {
-        borderImageSource: 'linear-gradient(45deg, #ff007a, #ff7e00, #00d2ff, #00ff7b)',
+        borderImageSource: 'radial-gradient(circle, #ff007a, #ff7e00, #00d2ff, #00ff7b)',
       },
       '50%': {
-        borderImageSource: 'linear-gradient(45deg, #00ff7b, #00d2ff, #ff7e00, #ff007a)',
+        borderImageSource: 'radial-gradient(circle, #00ff7b, #00d2ff, #ff7e00, #ff007a)',
       },
       '100%': {
-        borderImageSource: 'linear-gradient(45deg, #ff007a, #ff7e00, #00d2ff, #00ff7b)',
+        borderImageSource: 'radial-gradient(circle, #ff007a, #ff7e00, #00d2ff, #00ff7b)',
       },
     },
     '@keyframes glow': {
       '0%': {
-        boxShadow: '0 0 10px rgba(255, 255, 255, 0.5)',
+        boxShadow: '0 0 15px rgba(255, 255, 255, 0.5)',
       },
       '100%': {
-        boxShadow: '0 0 30px rgba(255, 255, 255, 1)',
+        boxShadow: '0 0 40px rgba(255, 255, 255, 1)',
       },
     },
+  }));
+
+  const CurvyBorder = styled(motion.div)(({ theme }) => ({
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    zIndex: 1,
+    boxSizing: 'border-box',
+    clipPath: 'path("M0,0 L100%,0 L100%,100% L0,100% Z M10,10 C10,10 20,20 10,30 C0,40 10,50 10,50 L90,50 C90,50 100,40 90,30 C80,20 70,10 70,10 Z")',
+    border: '15px solid transparent',
+    borderRadius: '20px',
+    background: 'linear-gradient(45deg, #ff007a, #ff7e00, #00d2ff, #00ff7b)',
+    backgroundClip: 'padding-box',
+    boxShadow: '0 0 20px rgba(255, 255, 255, 0.7)',
   }));
   
 const particleVariants = {
@@ -185,6 +204,7 @@ export default function GetStartedPage() {
             transition={{ type: 'spring', stiffness: 300 }}
           >
             Get Started
+            <ArrowForwardIcon sx={{ ml: 1 }} />  {/* Add arrow icon with margin-left */}
           </GetStartedButton>
         </GetStartedButtonContainer>
       </Box>
