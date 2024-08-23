@@ -21,21 +21,24 @@ const GetStartedButtonContainer = styled(motion.div)(({ theme }) => ({
 }));
 
 const GetStartedButton = styled(Button)(({ theme }) => ({
-  fontSize: '1.6rem',
-  color: '#fff',
-  padding: '15px 30px',
-  background: 'linear-gradient(135deg, #00bfae, #0070f3)',
-  borderRadius: '12px',
-  boxShadow: '0px 15px 35px rgba(0, 183, 172, 0.5)',
-  textTransform: 'uppercase',
-  '&:hover': {
-    background: 'linear-gradient(135deg, #009688, #005bb5)',
-    boxShadow: '0px 20px 40px rgba(0, 183, 172, 0.7)',
-  },
-  '&:active': {
-    boxShadow: '0px 15px 30px rgba(0, 183, 172, 0.4)',
-  },
-}));
+    fontSize: '1.6rem',
+    color: '#fff',  // Default text color
+    padding: '15px 30px',
+    background: 'linear-gradient(135deg, #ed570c, #c80ced)',  // Default background gradient
+    borderRadius: '12px',
+    boxShadow: '0px 15px 35px rgba(0, 183, 172, 0.5)',
+    textTransform: 'uppercase',
+    transition: 'all 0.3s ease',  // Smooth transition for all properties
+    '&:hover': {
+      color: '#fff',  // Text color becomes white on hover
+      background: 'linear-gradient(135deg, #00bfae, #0070f3)',  // Background gradient on hover
+      boxShadow: '0px 20px 40px rgba(0, 183, 172, 0.7)',
+    },
+    '&:active': {
+      boxShadow: '0px 15px 30px rgba(0, 183, 172, 0.4)',
+    },
+  }));
+  
 
 const ProfessorIcon = styled(motion(Box))(({ theme }) => ({
   position: 'absolute',
