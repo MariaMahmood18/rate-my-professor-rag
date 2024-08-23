@@ -104,13 +104,13 @@ const BorderMotion = styled(motion.div)(({ theme }) => ({
     left: 0,
     width: '100%',
     height: '100%',
-    border: '15px solid transparent', // Increased thickness
-    borderRadius: '20px', // Increased border-radius for more curve
+    border: '15px solid transparent',
+    borderRadius: '20px',
     zIndex: 1,
     boxSizing: 'border-box',
     pointerEvents: 'none',
     overflow: 'hidden',
-    borderImage: 'radial-gradient(circle, #ff007a, #ff7e00, #00d2ff, #00ff7b) 1', // Curvy gradient border
+    borderImage: 'radial-gradient(circle, #ff007a, #ff7e00, #00d2ff, #00ff7b) 1',
     animation: 'borderAnimate 10s linear infinite, glow 1.5s alternate infinite',
     '@keyframes borderAnimate': {
       '0%': {
@@ -131,23 +131,7 @@ const BorderMotion = styled(motion.div)(({ theme }) => ({
         boxShadow: '0 0 40px rgba(255, 255, 255, 1)',
       },
     },
-  }));
-
-  const CurvyBorder = styled(motion.div)(({ theme }) => ({
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    zIndex: 1,
-    boxSizing: 'border-box',
-    clipPath: 'path("M0,0 L100%,0 L100%,100% L0,100% Z M10,10 C10,10 20,20 10,30 C0,40 10,50 10,50 L90,50 C90,50 100,40 90,30 C80,20 70,10 70,10 Z")',
-    border: '15px solid transparent',
-    borderRadius: '20px',
-    background: 'linear-gradient(45deg, #ff007a, #ff7e00, #00d2ff, #00ff7b)',
-    backgroundClip: 'padding-box',
-    boxShadow: '0 0 20px rgba(255, 255, 255, 0.7)',
-  }));
+  }));  
   
 const particleVariants = {
   hidden: { opacity: 0 },
