@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { Box, Button, Typography } from '@mui/material';
 import { styled } from '@mui/system';
 import { motion } from 'framer-motion';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward'; // Import Arrow icon
 
 const Background = styled(Box)(({ theme }) => ({
   width: '100vw',
@@ -28,6 +29,10 @@ const GetStartedButton = styled(Button)(({ theme }) => ({
   borderRadius: '12px',
   boxShadow: '0px 15px 35px rgba(0, 183, 172, 0.5)',
   textTransform: 'uppercase',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '10px', // Space between text and arrow
   '&:hover': {
     background: 'linear-gradient(135deg, #009688, #005bb5)',
     boxShadow: '0px 20px 40px rgba(0, 183, 172, 0.7)',
@@ -93,40 +98,40 @@ const ParticleBackground = styled(motion(Box))(({ theme }) => ({
 }));
 
 const BorderMotion = styled(motion.div)(({ theme }) => ({
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  width: '100%',
-  height: '100%',
-  border: '5px solid transparent',
-  borderRadius: '12px',
-  zIndex: 1,
-  boxSizing: 'border-box',
-  borderImage: 'linear-gradient(45deg, #ff007a, #ff7e00, #00d2ff, #00ff7b) 1',
-  pointerEvents: 'none',
-  overflow: 'hidden',
-  animation: 'borderAnimate 10s linear infinite, glow 1.5s alternate infinite',
-  '@keyframes borderAnimate': {
-    '0%': {
-      borderImageSource: 'linear-gradient(45deg, #ff007a, #ff7e00, #00d2ff, #00ff7b)',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    border: '10px solid transparent', // Increased thickness
+    borderRadius: '12px',
+    zIndex: 1,
+    boxSizing: 'border-box',
+    borderImage: 'linear-gradient(45deg, #ff007a, #ff7e00, #00d2ff, #00ff7b) 1',
+    pointerEvents: 'none',
+    overflow: 'hidden',
+    animation: 'borderAnimate 10s linear infinite, glow 1.5s alternate infinite',
+    '@keyframes borderAnimate': {
+      '0%': {
+        borderImageSource: 'linear-gradient(45deg, #ff007a, #ff7e00, #00d2ff, #00ff7b)',
+      },
+      '50%': {
+        borderImageSource: 'linear-gradient(45deg, #00ff7b, #00d2ff, #ff7e00, #ff007a)',
+      },
+      '100%': {
+        borderImageSource: 'linear-gradient(45deg, #ff007a, #ff7e00, #00d2ff, #00ff7b)',
+      },
     },
-    '50%': {
-      borderImageSource: 'linear-gradient(45deg, #00ff7b, #00d2ff, #ff7e00, #ff007a)',
+    '@keyframes glow': {
+      '0%': {
+        boxShadow: '0 0 10px rgba(255, 255, 255, 0.5)',
+      },
+      '100%': {
+        boxShadow: '0 0 30px rgba(255, 255, 255, 1)',
+      },
     },
-    '100%': {
-      borderImageSource: 'linear-gradient(45deg, #ff007a, #ff7e00, #00d2ff, #00ff7b)',
-    },
-  },
-  '@keyframes glow': {
-    '0%': {
-      boxShadow: '0 0 10px rgba(255, 255, 255, 0.5)',
-    },
-    '100%': {
-      boxShadow: '0 0 30px rgba(255, 255, 255, 1)',
-    },
-  },
 }));
-
+  
 const particleVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 0.5 },  // Adjust opacity to make it more transparent
@@ -182,6 +187,7 @@ export default function GetStartedPage() {
             transition={{ type: 'spring', stiffness: 300 }}
           >
             Get Started
+            <ArrowForwardIcon sx={{ fontSize: '1.8rem', ml: 1 }} /> {/* Arrow icon */}
           </GetStartedButton>
         </GetStartedButtonContainer>
       </Box>
