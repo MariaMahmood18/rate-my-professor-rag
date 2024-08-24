@@ -1,117 +1,107 @@
 import { NextResponse } from 'next/server'
 import { Pinecone } from '@pinecone-database/pinecone'
-import { ReadableStream } from 'web-streams-polyfill'
+import axios from 'axios'
 
-// Define constants
-const PINECONE_API_KEY = process.env.PINECONE_API_KEY
-const EMBEDDING_DIMENSION = 1536
-const INDEX_NAME = 'rag'
+const systemPrompt = `
+You are a rate my professor agent to help students find classes, that takes in user questions and answers them.
+For every user question, the top 3 professors that match the user question are returned.
+Use them to answer the question if needed.
+`
 
-// Check if the API key is set
-if (!PINECONE_API_KEY) {
-    throw new Error('PINECONE_API_KEY environment variable is not set.')
-}
-
-// Initialize Pinecone client
-const pc = new Pinecone({ apiKey: PINECONE_API_KEY })
-
-// Access the index
-const index = pc.Index(INDEX_NAME)
-
-// Initialize Pinecone index
-async function initializePinecone() {
-    try {
-        // Check if the index exists, create if not
-        const indexList = await pc.listIndexes()
-        if (!indexList.includes(INDEX_NAME)) {
-            await pc.createIndex({
-                name: INDEX_NAME,
-                dimension: EMBEDDING_DIMENSION,
-                metric: 'cosine',
-                spec: { cloud: 'aws', region: 'us-east-1' }
-            })
-            console.log(`Index '${INDEX_NAME}' created successfully.`)
-        } else {
-            console.log(`Index '${INDEX_NAME}' already exists.`)
-        }
-    } catch (error) {
-        console.error('Error initializing Pinecone client:', error)
-        throw new Error('Failed to initialize Pinecone client')
-    }
-}
-
-// Ensure Pinecone is initialized
-initializePinecone()
-
-// Simulated embedding function
-async function getEmbedding(text) {
-    // Replace with actual embedding logic
-    const embedding = new Array(EMBEDDING_DIMENSION).fill(Math.random())
-    console.log('Generated embedding:', embedding)
-    return embedding
-}
-
-// Handle POST requests
 export async function POST(req) {
+    const data = await req.json()
+
+    const pc = new Pinecone({
+        apiKey: process.env.PINECONE_API_KEY,
+    })
+    const index = pc.index('rag').namespace('ns1')
+
+    const text = data[data.length - 1].content
+
+    // Create embedding using GeminiAPI
+    let embedding;
     try {
-        const data = await req.json()
-        console.log('Received data:', data)
-
-        const text = data[data.length - 1]?.content
-        if (!text) {
-            console.log('No content provided for embedding')
-            return NextResponse.json({ error: 'No content provided for embedding' }, { status: 400 })
-        }
-
-        // Get embedding
-        const embedding = await getEmbedding(text)
-        if (!embedding) {
-            console.log('Failed to retrieve embedding')
-            return NextResponse.json({ error: 'Failed to retrieve embedding' }, { status: 500 })
-        }
-
-        // Query Pinecone index
-        const results = await index.query({
-            topK: 3,
-            includeMetadata: true,
-            vector: embedding
-        })
-
-        console.log('Query results:', results)
-
-        if (!results.matches.length) {
-            console.log('No matches found in Pinecone index.')
-            return NextResponse.json({ message: 'No relevant results found.' }, { status: 404 })
-        }
-
-        let resultString = ''
-        results.matches.forEach((match) => {
-            resultString += `
-            Returned Results:
-            Professor: ${match.id}
-            Review: ${match.metadata?.review || 'N/A'}
-            Subject: ${match.metadata?.subject || 'N/A'}
-            Stars: ${match.metadata?.stars || 'N/A'}
-            \n\n`
-        })
-
-        const lastMessage = data[data.length - 1]
-        const lastMessageContent = lastMessage.content + resultString
-        const lastDataWithoutLastMessage = data.slice(0, -1)
-
-        // Simulate chat completion
-        const chatCompletionResponse = new ReadableStream({
-            async start(controller) {
-                const responseText = `Processed response based on input: ${lastMessageContent}`
-                controller.enqueue(new TextEncoder().encode(responseText))
-                controller.close()
+        const response = await axios.post('https://api.gemini.com/v1/embeddings', {
+            model: 'models/text-embedding-004',
+            content: text
+        }, {
+            headers: {
+                'Authorization': `Bearer ${process.env.GEMINI_API_KEY}`,
+                'Content-Type': 'application/json'
             }
         })
-
-        return new NextResponse(chatCompletionResponse)
-
+        embedding = response.data.embedding
     } catch (error) {
-        console.error('Error in POST request:', error)
-        return NextResponse.json({ error: 'An error occurred' }, { status: 500 })
+        console.error('Error creating embedding:', error)
+        return new NextResponse('Error creating embedding', { status: 500 })
     }
+
+    // Query Pinecone index
+    const results = await index.query({
+        topK: 5,
+        includeMetadata: true,
+        vector: embedding,
+    })
+
+    let resultString = ''
+    results.matches.forEach((match) => {
+        resultString += `
+        Returned Results:
+        Professor: ${match.id}
+        Review: ${match.metadata.review}
+        Subject: ${match.metadata.subject}
+        Stars: ${match.metadata.stars}
+        \n\n`
+    })
+
+    const lastMessage = data[data.length - 1]
+    const lastMessageContent = lastMessage.content + resultString
+    const lastDataWithoutLastMessage = data.slice(0, data.length - 1)
+
+    // Generate completion using GeminiAPI
+    let completion;
+    try {
+        const response = await axios.post('https://api.gemini.com/v1/completions', {
+            messages: [
+                { role: 'system', content: systemPrompt },
+                ...lastDataWithoutLastMessage,
+                { role: 'user', content: lastMessageContent },
+            ],
+            model: 'gemini-1.5-flash',  // Adjust model name if different
+            stream: true,
+        }, {
+            headers: {
+                'Authorization': `Bearer ${process.env.GEMINI_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            responseType: 'stream'
+        })
+        completion = response.data
+    } catch (error) {
+        console.error('Error generating completion:', error)
+        return new NextResponse('Error generating completion', { status: 500 })
+    }
+
+    // Handle streaming response
+    const stream = new ReadableStream({
+        async start(controller) {
+            const encoder = new TextEncoder()
+            try {
+                completion.on('data', chunk => {
+                    const content = chunk.choices[0]?.delta?.content
+                    if (content) {
+                        const text = encoder.encode(content)
+                        controller.enqueue(text)
+                    }
+                })
+                completion.on('end', () => {
+                    controller.close()
+                })
+            } catch (err) {
+                controller.error(err)
+            }
+        },
+    })
+
+    return new NextResponse(stream)
 }
